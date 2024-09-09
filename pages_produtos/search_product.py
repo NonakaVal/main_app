@@ -7,10 +7,8 @@ mydb, mycursor = conectar_banco_dados()
 if mydb and mycursor:
     # Realize suas operações com mydb e mycursor aqui
     pass
+
 # Carregar IDs e nomes das categorias
-
-
-
 
 with st.form("query_form"):
     nome_produto = st.text_input("Buscar por Nome do Produto")
@@ -23,7 +21,7 @@ with st.sidebar:
     condicao_produto = st.selectbox("Buscar por Condição", ['Todos', 'Novo', 'ComoNovo', 'MuitoBom', 'Bom', 'Aceitável', 'Ruim'])
 
     # Carrega e exibe IDs de Fabricante e Categoria
-    id_fabricante_produto = st.selectbox("Buscar por ID do Fabricante", ['Todos'] + [f"{f[0]} - {f[1]}" for f in load_ids("fabricante", "id_fabricante", "nome")])
+    id_fabricante_produto = st.selectbox("Buscar por ID do Fabricante", ['Todos'] + [f"{f[0]} - {f[1]}" for f in load_ids("marca", "id_marca", "nome")])
     id_fabricante_produto = (id_fabricante_produto.split(' ')[0]) if id_fabricante_produto != 'Todos' else None
 
     id_categoria_produto = st.selectbox("Buscar por ID da Categoria", ['Todos'] + [f"{c[0]} - {c[1]}" for c in load_ids("categoria", "id_categoria", "nome")])
@@ -32,7 +30,6 @@ with st.sidebar:
     min_valor = st.number_input("Valor Mínimo", min_value=0.0, format="%.2f")
     max_valor = st.number_input("Valor Máximo", min_value=0.0, format="%.2f")
     id_produto = st.text_input("Buscar por ID do Produto")
-
 
 if submitted:
     query = "SELECT * FROM produtos WHERE 1=1"
@@ -55,7 +52,7 @@ if submitted:
         params.append(1 if completo_produto == 'Sim' else 0)
     
     if id_fabricante_produto is not None:
-        query += " AND id_fabricante = %s"
+        query += " AND id_marca = %s"
         params.append(id_fabricante_produto)
     if id_categoria_produto is not None:
         query += " AND id_categoria = %s"
@@ -76,64 +73,46 @@ if submitted:
     if result:
         for row in result:
             with st.expander(f"{row[1]} - {row[0]}"):
-                st.write(f"**Nome:** {row[1]}")
-                st.write(f"**Descrição:** {row[12]}")
-                st.write(f"**Condição:** {row[5]}")
-                st.write(f"**Completo:** {'Sim' if row[6] else 'Não'}")
-                st.write(f"**Número de Série:** {row[8]}")
-                st.write(f"**Número de Série da Caixa:** {row[9]}")
-                st.write(f"**Quantidade em Estoque:** {row[16]}")
-                st.write(f"**Idioma:** {row[10]}")
-
+                st.write(f"**ID do Produto:** {row[0]}")
+                st.write(f"**Título:** {row[1]}")
+                st.write(f"**ID da Categoria:** {row[2]}")
+                st.write(f"**ID da Edição:** {row[3]}")
+                st.write(f"**ID do Fabricante:** {row[4]}")
+                st.write(f"**ID da Editora:** {row[5]}")
+                st.write(f"**Condição:** {row[6]}")
+                st.write(f"**Completo:** {'Sim' if row[7] else 'Não'}")
+                st.write(f"**Manual de Instruções:** {'Sim' if row[8] else 'Não'}")
+                st.write(f"**Número de Série:** {row[9]}")
+                st.write(f"**Número de Série da Caixa:** {row[10]}")
+                st.write(f"**Idiomas Disponíveis:** {row[11]}")
+                
                 # Exibe a imagem do produto
                 try:
-                    if row[11]:
-                        st.image(row[11], width=500, caption=f"Imagem do Produto {row[1]}")
+                    if row[12]:
+                        st.image(row[12], width=500, caption=f"Imagem do Produto {row[1]}")
                     else:
                         st.write("Imagem não disponível.")
                 except Exception as e:
                     st.write("Erro ao carregar a imagem. Verifique o link da imagem.")
 
-                st.write(f"**Raridade:** {row[15]}")
-                st.write(f"**Conteúdo da Edição:** {row[13]}")
-                st.write(f"**Acessórios Incluídos:** {row[14]}")
-                st.write(f"**Valor:** {row[19]:.2f}")
-                st.write(f"**Data de Recebimento:** {row[17]}")
+                st.write(f"**Descrição:** {row[13]}")
+                st.write(f"**Conteúdo da Edição:** {row[14]}")
+                st.write(f"**Acessórios Incluídos:** {row[15]}")
+                st.write(f"**Raridade:** {row[16]}")
+                st.write(f"**Estoque:** {row[17]}")
+                st.write(f"**Data de Recebimento:** {row[18]}")
+                st.write(f"**Preço de Custo:** {row[19]}")
+                st.write(f"**Preço de Venda:** {row[20]}")
+                st.write(f"**ID da Embalagem:** {row[21]}")
+                st.write(f"**Código de Barras:** {row[22]}")
+                st.write(f"**Código Universal:** {row[23]}")
+                st.write(f"**Anunciado:** {'Sim' if row[24] else 'Não'}")
+                st.write(f"**ID do Anúncio:** {row[25]}")
 
-                
-                categorias = load_ids("categoria", "id_categoria", "nome")
-                id_categoria_dict = {c[0]: c[1] for c in categorias} 
-                id_categoria = row[2]
-                nome_categoria = id_categoria_dict.get(id_categoria, "Nome da Categoria não encontrado")
-                st.write(f"**ID da Categoria:** {id_categoria} - {nome_categoria}")
-                
-                    # Carregar IDs e nomes
-                # Carregar IDs e nomes
-                fabricantes = load_ids("fabricante", "id_fabricante", "nome")
-                id_fabricante_dict = {f[0]: f[1] for f in fabricantes}  # Mapeia ID para nome
-                # Busca o nome do fabricante usando o ID
-                id_fabricante = row[3]
-                nome_fabricante = id_fabricante_dict.get(id_fabricante, "Nome do Fabricante não encontrado")
-                st.write(f"**ID do Fabricante:** {id_fabricante} - {nome_fabricante}")
-
-
-                editoras = load_ids("editora", "id_editora", "nome")
-                id_editora_dict = {e[0]: e[1] for e in editoras}  # Mapeia ID para nome
-                id_editora = row[4]
-                nome_editora = id_editora_dict.get(id_editora, "Nome da Editora não encontrado")
-                st.write(f"**ID da Editora:** {id_editora} - {nome_editora}")
-
-
-
-
-                st.write(f"**ID da Embalagem:** {row[20]}")
-                st.write(f"**codigo universal** {row[22]}")
-                st.write(f"**Esta anunciado** {row[23]}")
-    
                 # Exibe a imagem do código de barras
                 try:
-                    if row[21]:
-                        st.image(row[21], width=200, caption=f"Código de Barras - Produto {row[1]}")
+                    if row[22]:
+                        st.image(row[22], width=200, caption=f"Código de Barras - Produto {row[1]}")
                     else:
                         st.write("Código de barras não disponível.")
                 except Exception as e:

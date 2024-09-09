@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 import mysql.connector
+from mysql.connector import Error
 import random
 from barcode import Code128
 from barcode.writer import ImageWriter
@@ -83,7 +84,7 @@ def product_exists(titulo, serial_number):
         return False
 
 def display_menu_cadastro():
-    tab1, tab2, tab3, tab4 = st.tabs(["Produto", "Categorias", "Editoras", "Fabricantes"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Produto", "Categorias","Edições", "Editoras", "Fabricantes"])
 
     with tab1:
         with st.expander("Pesquisar Número Universal"):
@@ -99,16 +100,24 @@ def display_menu_cadastro():
             serial_caixa_produto = st.text_input("Número de Série da Caixa")
             idiomas_disponiveis_produto = st.selectbox("Idiomas Disponíveis", ('Global', 'pt-BR', 'en-US', 'ja-JP'))
             
-            # Carregar IDs e nomes
-            fabricantes = load_ids("fabricante", "id_fabricante", "nome")
-            id_fabricante_dict = {f[1]: f[0] for f in fabricantes}
-            nome_fabricante = st.selectbox("Nome do Fabricante", list(id_fabricante_dict.keys()))
-            id_fabricante = id_fabricante_dict.get(nome_fabricante)
-
             categorias = load_ids("categoria", "id_categoria", "nome")
             id_categoria_dict = {c[1]: c[0] for c in categorias}
             nome_categoria = st.selectbox("Nome da Categoria", list(id_categoria_dict.keys()))
             id_categoria_produto = id_categoria_dict.get(nome_categoria)
+                     # Carregar IDs e nomes
+
+            edicoes = load_ids("edition", "id_edition", "nome")
+            id_edition_dict = {f[1]: f[0] for f in edicoes}
+            nome_edition = st.selectbox("Nome da edição", list(id_edition_dict.keys()))
+            id_edicao = id_edition_dict.get(nome_edition)
+
+
+            # Carregar IDs e nomes
+            marcas = load_ids("marca", "id_marca", "nome")
+            id_marca_dict = {f[1]: f[0] for f in marcas}
+            nome_marca = st.selectbox("Nome do Marca", list(id_marca_dict.keys()))
+            id_marca = id_marca_dict.get(nome_marca)
+
             
             editoras = load_ids("editora", "id_editora", "nome")
             id_editora_dict = {e[1]: e[0] for e in editoras}
@@ -141,7 +150,7 @@ def display_menu_cadastro():
                     st.error("Título do produto e número de série são obrigatórios.")
                 elif product_exists(titulo_produto, serial_number_produto):
                     st.error("Produto com este título e número de série já existe.")
-                elif id_fabricante is None or id_categoria_produto is None or id_editora_produto is None:
+                elif id_marca is None or id_categoria_produto is None or id_editora_produto is None:
                     st.error("Um ou mais IDs selecionados são inválidos.")
                 else:
                     sku = generate_sku(id_categoria_produto)  # Gera um novo SKU para o produto
@@ -160,16 +169,16 @@ def display_menu_cadastro():
                         # Preparar a consulta SQL
                         sql = """
                             INSERT INTO produtos (
-                                id_produto, titulo, id_categoria, id_fabricante, id_editora, condicao, completo, manual_instrucoes, 
+                                id_produto, titulo, id_categoria, id_edition,  id_marca, id_editora, condicao, completo, manual_instrucoes, 
                                 serial_number, serial_caixa, idiomas_disponiveis, imagem, descricao, conteudo_edicao, 
                                 acessorios_incluidos, raridade, estoque, data_recebimento, preco_custo, preco_venda, id_embalagem, 
                                 codigo_barras, codigo_universal, anunciado, ITEM_ID
                             ) VALUES (
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                             )
                         """
                         values = (
-                            sku, titulo_produto, id_categoria_produto, id_fabricante, id_editora_produto,
+                            sku, titulo_produto, id_categoria_produto, id_edicao, id_marca, id_editora_produto,
                             condicao_produto, int(completo_produto), int(manual_instrucoes_produto),
                             serial_number_produto, serial_caixa_produto, idiomas_disponiveis_produto, imagem_produto,
                             descricao_produto, conteudo_edicao_produto, acessorios_incluidos_produto, raridade_produto,
@@ -195,29 +204,30 @@ def display_menu_cadastro():
                                 st.json({
                                     "ID do Produto": produto[0],            # id_produto
                                     "Título": produto[1],                   # titulo
-                                    "ID da Categoria": produto[2],          # id_categoria
-                                    "ID do Fabricante": produto[3],         # id_fabricante
-                                    "ID da Editora": produto[4],            # id_editora
-                                    "Condição": produto[5],                 # condicao
-                                    "Completo": produto[6],                 # completo
-                                    "Manual de Instruções": produto[7],     # manual_instrucoes
-                                    "Número de Série": produto[8],          # serial_number
-                                    "Número de Série da Caixa": produto[9], # serial_caixa
-                                    "Idiomas Disponíveis": produto[10],     # idiomas_disponiveis
-                                    "Imagem": produto[11],                 # imagem
-                                    "Descrição": produto[12],              # descricao
-                                    "Conteúdo da Edição": produto[13],      # conteudo_edicao
-                                    "Acessórios Incluídos": produto[14],    # acessorios_incluidos
-                                    "Raridade": produto[15],                # raridade
-                                    "Estoque": produto[16],                # estoque
-                                    "Data de Recebimento": produto[17],     # data_recebimento
-                                    "Preço de Custo": produto[18],          # preco_custo
-                                    "Preço de Venda": produto[19],          # preco_venda
-                                    "ID da Embalagem": produto[20],         # id_embalagem
-                                    "Código de Barras": produto[21],        # codigo_barras
-                                    "Código Universal": produto[22],       # codigo_universal
-                                    "Anunciado": produto[23]   ,
-                                    "id_anuncio": produto[24]            # anunciado
+                                    "ID da Categoria": produto[2],  
+                                    "ID do edicao": produto[3],         # id_categoria
+                                    "ID do Fabricante": produto[4],         # id_fabricante
+                                    "ID da Editora": produto[5],            # id_editora
+                                    "Condição": produto[6],                 # condicao
+                                    "Completo": produto[7],                 # completo
+                                    "Manual de Instruções": produto[8],     # manual_instrucoes
+                                    "Número de Série": produto[9],          # serial_number
+                                    "Número de Série da Caixa": produto[10], # serial_caixa
+                                    "Idiomas Disponíveis": produto[11],     # idiomas_disponiveis
+                                    "Imagem": produto[12],                 # imagem
+                                    "Descrição": produto[13],              # descricao
+                                    "Conteúdo da Edição": produto[14],      # conteudo_edicao
+                                    "Acessórios Incluídos": produto[15],    # acessorios_incluidos
+                                    "Raridade": produto[16],                # raridade
+                                    "Estoque": produto[17],                # estoque
+                                    "Data de Recebimento": produto[18],     # data_recebimento
+                                    "Preço de Custo": produto[19],          # preco_custo
+                                    "Preço de Venda": produto[20],          # preco_venda
+                                    "ID da Embalagem": produto[21],         # id_embalagem
+                                    "Código de Barras": produto[22],        # codigo_barras
+                                    "Código Universal": produto[23],       # codigo_universal
+                                    "Anunciado": produto[24]   ,
+                                    "id_anuncio": produto[25]            # anunciado
                                 })
                         except Exception as e:
                             st.error(f"Erro ao conectar ao banco de dados ou ao registrar o produto: {e}")
@@ -268,7 +278,7 @@ def display_menu_cadastro():
                                 registrar_historico("Registro", "categorias", detalhes)
 
                                 st.success("Categoria Registrada com Sucesso!!!")
-                        except Error as e:
+                        except:
                             st.error(f"Erro ao operar no banco de dados: {e}")
                         finally:
                             fechar_conexao(mydb, mycursor)
@@ -285,12 +295,73 @@ def display_menu_cadastro():
                         st.write(f"**ID:** {categoria[0]} - {categoria[1]}")
                 else:
                     st.write("Nenhuma categoria cadastrada.")
-            except Error as e:
+            except:
                 st.error(f"Erro ao buscar categorias: {e}")
             finally:
                 fechar_conexao(mydb, mycursor)
 
     with tab3:
+        with st.form("editionform"):
+                edition_name = st.text_input("Nome da Edição")
+
+                if st.form_submit_button("Registrar Edição"):
+                    if not edition_name:
+                        st.error("Nome do Edição é obrigatório.")
+                    else:
+                        mydb, mycursor = conectar_banco_dados()
+                        if mydb and mycursor:
+                            try:
+                                # Verificar se o fabricante já existe
+                                mycursor.execute("SELECT COUNT(*) FROM edition WHERE nome = %s", (edition_name,))
+                                existe_fabricante = mycursor.fetchone()[0]
+
+                                if existe_fabricante > 0:
+                                    st.error("edition com esse nome já existe.")
+                                else:
+                                    # Obter o maior ID existente
+                                    mycursor.execute("SELECT id_edition FROM edition WHERE id_edition REGEXP '^D[0-9]{3}$' ORDER BY id_edition DESC LIMIT 1")
+                                    max_id_result = mycursor.fetchone()
+
+                                    if max_id_result:
+                                        max_id = max_id_result[0]
+                                        max_numero = int(max_id[1:])  # Remove o prefixo 'F' e converte para inteiro
+                                        next_id = f"D{str(max_numero + 1).zfill(3)}"
+                                    else:
+                                        next_id = 'D001'  # Se não houver ID válido, começa do 'F001'
+
+                                    # Inserir novo fabricante com o ID gerado
+                                    sql = "INSERT INTO edition (id_edition, nome) VALUES (%s, %s)"
+                                    mycursor.execute(sql, (next_id, edition_name))
+                                    mydb.commit()
+
+                                    # Registrar no histórico
+                                    detalhes = f"edition '{edition_name}' com ID {next_id} registrado com sucesso."
+                                    registrar_historico("Registro", "editionform", detalhes)
+
+                                    st.success("edition_name Registrado com Sucesso!!!")
+                            except Error as e:
+                                st.error(f"Erro ao operar no banco de dados: {e}")
+                            finally:
+                                fechar_conexao(mydb, mycursor)
+            
+        st.text("edition_name Cadastrados")
+        mydb, mycursor = conectar_banco_dados()
+        if mydb and mycursor:
+            try:
+                mycursor.execute("SELECT * FROM edition")
+                editions = mycursor.fetchall()
+                if editions:
+                    for edition in editions:
+                        st.write(f"**ID:** {edition[0]} - {edition[1]}")
+                else:
+                    st.write("Nenhum edition cadastrado.")
+            except Error as e:
+                st.error(f"Erro ao buscar edition: {e}")
+            finally:
+                fechar_conexao(mydb, mycursor)
+
+
+    with tab4:
         with st.form("publisher_form"):
             nome_editora = st.text_input("Nome da Editora")
 
@@ -350,62 +421,62 @@ def display_menu_cadastro():
             finally:
                 fechar_conexao(mydb, mycursor)
 
-    with tab4:
+    with tab5:
         with st.form("manufacturer_form"):
-            nome_fabricante = st.text_input("Nome do Fabricante")
+            nome_marca = st.text_input("Nome do id_marca")
 
-            if st.form_submit_button("Registrar Fabricante"):
-                if not nome_fabricante:
-                    st.error("Nome do fabricante é obrigatório.")
+            if st.form_submit_button("Registrar id_marca"):
+                if not nome_marca:
+                    st.error("Nome do id_marca é obrigatório.")
                 else:
                     mydb, mycursor = conectar_banco_dados()
                     if mydb and mycursor:
                         try:
                             # Verificar se o fabricante já existe
-                            mycursor.execute("SELECT COUNT(*) FROM fabricante WHERE nome = %s", (nome_fabricante,))
+                            mycursor.execute("SELECT COUNT(*) FROM marca WHERE nome = %s", (nome_marca,))
                             existe_fabricante = mycursor.fetchone()[0]
 
                             if existe_fabricante > 0:
-                                st.error("Fabricante com esse nome já existe.")
+                                st.error("nome_marca com esse nome já existe.")
                             else:
                                 # Obter o maior ID existente
-                                mycursor.execute("SELECT id_fabricante FROM fabricante WHERE id_fabricante REGEXP '^F[0-9]{3}$' ORDER BY id_fabricante DESC LIMIT 1")
+                                mycursor.execute("SELECT id_marca FROM marca WHERE id_marca REGEXP '^B[0-9]{3}$' ORDER BY id_marca DESC LIMIT 1")
                                 max_id_result = mycursor.fetchone()
 
                                 if max_id_result:
                                     max_id = max_id_result[0]
                                     max_numero = int(max_id[1:])  # Remove o prefixo 'F' e converte para inteiro
-                                    next_id = f"F{str(max_numero + 1).zfill(3)}"
+                                    next_id = f"B{str(max_numero + 1).zfill(3)}"
                                 else:
-                                    next_id = 'F001'  # Se não houver ID válido, começa do 'F001'
+                                    next_id = 'B001'  # Se não houver ID válido, começa do 'F001'
 
                                 # Inserir novo fabricante com o ID gerado
-                                sql = "INSERT INTO fabricante (id_fabricante, nome) VALUES (%s, %s)"
-                                mycursor.execute(sql, (next_id, nome_fabricante))
+                                sql = "INSERT INTO marca (id_marca, nome) VALUES (%s, %s)"
+                                mycursor.execute(sql, (next_id, nome_marca))
                                 mydb.commit()
 
                                 # Registrar no histórico
-                                detalhes = f"Fabricante '{nome_fabricante}' com ID {next_id} registrado com sucesso."
-                                registrar_historico("Registro", "fabricantes", detalhes)
+                                detalhes = f"Fabricante '{nome_marca}' com ID {next_id} registrado com sucesso."
+                                registrar_historico("Registro", "id_marca", detalhes)
 
-                                st.success("Fabricante Registrado com Sucesso!!!")
+                                st.success("nome_marca Registrado com Sucesso!!!")
                         except Error as e:
                             st.error(f"Erro ao operar no banco de dados: {e}")
                         finally:
                             fechar_conexao(mydb, mycursor)
         
-        st.text("Fabricantes Cadastrados")
+        st.text("nome_marca Cadastrados")
         mydb, mycursor = conectar_banco_dados()
         if mydb and mycursor:
             try:
-                mycursor.execute("SELECT * FROM fabricante")
+                mycursor.execute("SELECT * FROM marca")
                 fabricantes = mycursor.fetchall()
                 if fabricantes:
                     for fabricante in fabricantes:
                         st.write(f"**ID:** {fabricante[0]} - {fabricante[1]}")
                 else:
-                    st.write("Nenhum fabricante cadastrado.")
+                    st.write("Nenhum nome_marca cadastrado.")
             except Error as e:
-                st.error(f"Erro ao buscar fabricantes: {e}")
+                st.error(f"Erro ao buscar nome_marca: {e}")
             finally:
                 fechar_conexao(mydb, mycursor)

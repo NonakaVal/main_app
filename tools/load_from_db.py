@@ -141,22 +141,23 @@ def exibir_df(tabela, colunas=None):
     
     except mysql.connector.Error as err:
         st.error(f"Erro ao buscar os itens cadastrados: {err}")
+import streamlit as st
 
 def exibir_tipos_cadastrados(mycursor):
     """
-    Exibe os dados das tabelas 'fabricante', 'categoria' e 'editora' em abas no Streamlit.
+    Exibe os dados das tabelas 'marca', 'categoria' e 'editora' em abas no Streamlit.
     """
-    tab1, tab2, tab3 = st.tabs(["Fabricantes", "Categorias", "Editoras"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Marcas", "Categorias", "Editoras", "Edições"])
 
     with tab1:
-        st.markdown("##### Fabricantes Cadastrados")
-        mycursor.execute("SELECT * FROM fabricante")
-        fabricantes = mycursor.fetchall()
-        if fabricantes:
-            for fabricante in fabricantes:
-                st.write(f"**ID:** {fabricante[0]} - {fabricante[1]}")
+        st.markdown("##### Marcas Cadastradas")
+        mycursor.execute("SELECT * FROM marca")
+        marcas = mycursor.fetchall()
+        if marcas:
+            for marca in marcas:
+                st.write(f"**ID:** {marca[0]} - {marca[1]}")
         else:
-            st.write("Nenhum fabricante cadastrado.")
+            st.write("Nenhuma marca cadastrada.")
     
     with tab2:
         st.markdown("##### Categorias Cadastradas")
@@ -177,6 +178,17 @@ def exibir_tipos_cadastrados(mycursor):
                 st.write(f"**ID:** {editora[0]} - {editora[1]}")
         else:
             st.write("Nenhuma editora cadastrada.")
+    with tab4:
+        st.markdown("##### Editoras Cadastradas")
+        mycursor.execute("SELECT * FROM edition")
+        editoras = mycursor.fetchall()
+        if editoras:
+            for editora in editoras:
+                st.write(f"**ID:** {editora[0]} - {editora[1]}")
+        else:
+            st.write("Nenhuma editora cadastrada.")
+
+
 def buscar_produtos_por_nome(nome_produto):
     # Conectar ao banco de dados
     mydb, mycursor = conectar_banco_dados()

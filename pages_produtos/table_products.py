@@ -58,10 +58,11 @@ else:
         nome_produto = st.text_input("Buscar por Nome do Produto")
         condicao_produto = st.selectbox("Buscar por Condição", ['Todos', 'Novo', 'ComoNovo', 'MuitoBom', 'Bom', 'Aceitável', 'Ruim'])
         
-        # Carregar IDs dos fabricantes e categorias se necessário
+        # Carregar IDs de categoria, edições, marca e editora, se necessário
         if tabela_selecionada in ["produtos", "anuncio"]:
-            fabricantes = load_ids("fabricante", "id_fabricante", "nome")
             categorias = load_ids("categoria", "id_categoria", "nome")
+            edicoes = load_ids("edition", "id_edition", "nome")
+            marcas = load_ids("marca", "id_marca", "nome")
             editoras = load_ids("editora", "id_editora", 'nome')
 
             id_categoria_opcoes = ['Todos'] + [f"{c[0]} - {c[1]}" for c in categorias]
@@ -71,20 +72,26 @@ else:
             )
             id_categoria_produto = id_categoria_produto.split(' ')[0] if id_categoria_produto != 'Todos' else None
 
-            id_editoras_opcoes = ['Todos'] + [f"{c[0]} - {c[1]}" for c in editoras]
+            id_edicoes_opcoes = ['Todos'] + [f"{e[0]} - {e[1]}" for e in edicoes]
+            id_edicoes_produto = st.selectbox(
+                "Buscar por ID da Edição",
+                id_edicoes_opcoes
+            )
+            id_edicoes_produto = id_edicoes_produto.split(' ')[0] if id_edicoes_produto != 'Todos' else None
+
+            id_marca_opcoes = ['Todos'] + [f"{m[0]} - {m[1]}" for m in marcas]
+            id_marca_produto = st.selectbox(
+                "Buscar por ID da Marca",
+                id_marca_opcoes
+            )
+            id_marca_produto = id_marca_produto.split(' ')[0] if id_marca_produto != 'Todos' else None
+
+            id_editoras_opcoes = ['Todos'] + [f"{e[0]} - {e[1]}" for e in editoras]
             id_editoras_produto = st.selectbox(
-                "Buscar por ID da editora",
+                "Buscar por ID da Editora",
                 id_editoras_opcoes
             )
             id_editoras_produto = id_editoras_produto.split(' ')[0] if id_editoras_produto != 'Todos' else None
-
-            # Criação do menu de seleção múltipla com limite de itens visíveis
-            id_fabricante_opcoes = ['Todos'] + [f"{f[0]} - {f[1]}" for f in fabricantes]
-            id_fabricante_produto = st.selectbox(
-                "Buscar por ID do Fabricante",
-                id_fabricante_opcoes
-            )
-            id_fabricante_produto = id_fabricante_produto.split(' ')[0] if id_fabricante_produto != 'Todos' else None
 
         produto_anunciado = st.radio("Buscar está Anunciado", ['Todos', 'Sim', 'Não'])
     
@@ -98,12 +105,15 @@ else:
         if condicao_produto != 'Todos':
             query += " AND condicao = %s"
             params.append(condicao_produto)
-        if tabela_selecionada in ["produtos", "anuncio"] and id_fabricante_produto:
-            query += " AND id_fabricante = %s"
-            params.append(id_fabricante_produto)
         if tabela_selecionada in ["produtos", "anuncio"] and id_categoria_produto:
             query += " AND id_categoria = %s"
             params.append(id_categoria_produto)
+        if tabela_selecionada in ["produtos", "anuncio"] and id_edicoes_produto:
+            query += " AND id_edition = %s"
+            params.append(id_edicoes_produto)
+        if tabela_selecionada in ["produtos", "anuncio"] and id_marca_produto:
+            query += " AND id_marca = %s"
+            params.append(id_marca_produto)
         if tabela_selecionada in ["produtos", "anuncio"] and id_editoras_produto:
             query += " AND id_editora = %s"
             params.append(id_editoras_produto)
