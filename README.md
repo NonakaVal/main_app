@@ -11,6 +11,7 @@ Interface Streamlit integrada a um banco de dados mysql.
 
 ---
 
+https://youtu.be/GTrgzzWc8XU
 
 ### Ajustes e melhorias
 
