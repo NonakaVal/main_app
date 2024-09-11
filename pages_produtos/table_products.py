@@ -56,7 +56,7 @@ else:
         submit_button = st.form_submit_button("Buscar")
 
         nome_produto = st.text_input("Buscar por Nome do Produto")
-        condicao_produto = st.selectbox("Buscar por Condição", ['Todos', 'Novo', 'ComoNovo', 'MuitoBom', 'Bom', 'Aceitável', 'Ruim'])
+        condicao_produto = st.selectbox("Buscar por Condição", ['Z', 'G','N', 'S', 'A', 'B', 'C', 'D', 'E', 'J'])
         
         # Carregar IDs de categoria, edições, marca e editora, se necessário
         if tabela_selecionada in ["produtos", "anuncio"]:

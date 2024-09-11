@@ -82,6 +82,34 @@ def product_exists(titulo, serial_number):
     except mysql.connector.Error as err:
         st.error(f"Erro ao verificar existência do produto: {err}")
         return False
+import qrcode
+from io import BytesIO
+from qrcode.image.pure import PyPNGImage
+
+def generate_qr_code(link):
+    """
+    Gera um QR code a partir de um link e retorna a imagem em um buffer (BytesIO).
+    
+    Args:
+        link (str): O link a ser embutido no QR code.
+    
+    Returns:
+        BytesIO: Um objeto de buffer contendo a imagem do QR code.
+    """
+    # Gerar o QR code usando a biblioteca qrcode
+    img = qrcode.make(link, image_factory=PyPNGImage)
+    
+    # Salvar a imagem em um buffer de memória
+    buffer = BytesIO()
+    img.save(buffer)
+    buffer.seek(0)  # Retornar ao início do buffer para leitura
+    
+    return buffer
+
+# Exemplo de uso
+link = "https://encurtador.com.br/qslY6"
+
+
 
 def display_menu_cadastro():
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["Produto", "Categorias","Edições", "Editoras", "Fabricantes"])
@@ -93,13 +121,19 @@ def display_menu_cadastro():
 
         with st.form("product_form"):
             titulo_produto = st.text_input("Título do Produto")
-            condicao_produto = st.selectbox("Condição", ('Novo', 'ComoNovo', 'MuitoBom', 'Bom', 'Aceitável', 'Ruim'))
+
+            
             completo_produto = st.checkbox("Completo")
             manual_instrucoes_produto = st.checkbox("Manual de Instruções")
             serial_number_produto = st.text_input("Número de Série")
             serial_caixa_produto = st.text_input("Número de Série da Caixa")
             idiomas_disponiveis_produto = st.selectbox("Idiomas Disponíveis", ('Global', 'pt-BR', 'en-US', 'ja-JP'))
             
+            conditions = load_ids("condicao_descricao", "codigo", "nome")
+            id_conditions_dict = {f[1]: f[0] for f in conditions}
+            nome_condition = st.selectbox("condição", list(id_conditions_dict.keys()))
+            id_condition = id_conditions_dict.get(nome_condition)
+
             categorias = load_ids("categoria", "id_categoria", "nome")
             id_categoria_dict = {c[1]: c[0] for c in categorias}
             nome_categoria = st.selectbox("Nome da Categoria", list(id_categoria_dict.keys()))
@@ -142,8 +176,8 @@ def display_menu_cadastro():
             codigo_universal_produto = st.text_input("Código Universal")
             anunciado_produto = st.checkbox("Anunciado")
             id_anuncio = st.text_input("Código id_anuncio")
-
-
+            link = st.text_input("Link Anúncio")
+   
 
             if st.form_submit_button("Registrar Produto"):
                 if not titulo_produto or not serial_number_produto:
@@ -156,7 +190,7 @@ def display_menu_cadastro():
                     sku = generate_sku(id_categoria_produto)  # Gera um novo SKU para o produto
                     barcode_buffer = generate_barcode(sku)  # Gera o código de barras
                     barcode_path = os.path.join('bar_codes', f'{sku}.png')
-                    
+                    qr_code_buffer = generate_qr_code(link)
                     # Certificar-se de que o diretório existe
                     if not os.path.exists('bar_codes'):
                         os.makedirs('bar_codes')
@@ -166,24 +200,28 @@ def display_menu_cadastro():
                         with open(barcode_path, 'wb') as f:
                             f.write(barcode_buffer.getvalue())
 
+                        # Salvar a imagem do QR code
+                        with open(barcode_path, 'wb') as f:
+                            f.write(qr_code_buffer.getvalue())
+
                         # Preparar a consulta SQL
                         sql = """
                             INSERT INTO produtos (
                                 id_produto, titulo, id_categoria, id_edition,  id_marca, id_editora, condicao, completo, manual_instrucoes, 
                                 serial_number, serial_caixa, idiomas_disponiveis, imagem, descricao, conteudo_edicao, 
                                 acessorios_incluidos, raridade, estoque, data_recebimento, preco_custo, preco_venda, id_embalagem, 
-                                codigo_barras, codigo_universal, anunciado, ITEM_ID
+                                codigo_barras, codigo_universal, anunciado, ITEM_ID, ad_link
                             ) VALUES (
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s, %s, %s, %s, %s, %s
                             )
                         """
                         values = (
                             sku, titulo_produto, id_categoria_produto, id_edicao, id_marca, id_editora_produto,
-                            condicao_produto, int(completo_produto), int(manual_instrucoes_produto),
+                            id_condition, int(completo_produto), int(manual_instrucoes_produto),
                             serial_number_produto, serial_caixa_produto, idiomas_disponiveis_produto, imagem_produto,
                             descricao_produto, conteudo_edicao_produto, acessorios_incluidos_produto, raridade_produto,
                             estoque_produto, data_recebimento_produto, preco_custo_produto, preco_venda_produto,
-                            id_embalagem_produto, barcode_path, codigo_universal_produto, int(anunciado_produto), id_anuncio
+                            id_embalagem_produto, barcode_path, codigo_universal_produto, int(anunciado_produto), id_anuncio, link
                         )
 
                         # Conectar ao banco de dados e executar a inserção

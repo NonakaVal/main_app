@@ -147,7 +147,7 @@ def exibir_tipos_cadastrados(mycursor):
     """
     Exibe os dados das tabelas 'marca', 'categoria' e 'editora' em abas no Streamlit.
     """
-    tab1, tab2, tab3, tab4 = st.tabs(["Marcas", "Categorias", "Editoras", "Edições"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Marcas", "Categorias", "Editoras", "Edições", "Condição"])
 
     with tab1:
         st.markdown("##### Marcas Cadastradas")
@@ -187,7 +187,15 @@ def exibir_tipos_cadastrados(mycursor):
                 st.write(f"**ID:** {editora[0]} - {editora[1]}")
         else:
             st.write("Nenhuma editora cadastrada.")
-
+    with tab5:
+        st.markdown("##### Editoras Cadastradas")
+        mycursor.execute("SELECT * FROM condicao_descricao")
+        editoras = mycursor.fetchall()
+        if editoras:
+            for editora in editoras:
+                st.write(f"{editora[0]} - {editora[1]} - {editora[2]}")
+        else:
+            st.write("Nenhuma editora cadastrada.")
 
 def buscar_produtos_por_nome(nome_produto):
     # Conectar ao banco de dados
