@@ -15,12 +15,14 @@ with st.form("query_form"):
     submitted = st.form_submit_button("Buscar")
 
 with st.sidebar:
+    id_produto = st.text_input("Buscar por ID do Produto")
     descricao_produto = st.text_area("Buscar por Descrição")
     produto_anunciado = st.radio("Buscar está Anunciado", ['Todos', 'Sim', 'Não'])
     completo_produto = st.radio("Buscar por Completo", ['Todos', 'Sim', 'Não'])
-    condicao_produto = st.selectbox("Buscar por Condição", ['Todos', 'Novo', 'ComoNovo', 'MuitoBom', 'Bom', 'Aceitável', 'Ruim'])
-
-    # Carrega e exibe IDs de Fabricante e Categoria
+    
+    id_condicao_produto = st.selectbox("Buscar por ID da Condição", ['Todos'] + [f"{f[0]} - {f[1]}" for f in load_ids("condicao_descricao", "codigo", "nome")])
+    id_condicao_produto = (id_condicao_produto.split(' ')[0]) if id_condicao_produto != 'Todos' else None
+    
     id_fabricante_produto = st.selectbox("Buscar por ID do Fabricante", ['Todos'] + [f"{f[0]} - {f[1]}" for f in load_ids("marca", "id_marca", "nome")])
     id_fabricante_produto = (id_fabricante_produto.split(' ')[0]) if id_fabricante_produto != 'Todos' else None
 
@@ -29,7 +31,6 @@ with st.sidebar:
 
     min_valor = st.number_input("Valor Mínimo", min_value=0.0, format="%.2f")
     max_valor = st.number_input("Valor Máximo", min_value=0.0, format="%.2f")
-    id_produto = st.text_input("Buscar por ID do Produto")
 
 if submitted:
     query = "SELECT * FROM produtos WHERE 1=1"
@@ -44,9 +45,9 @@ if submitted:
     if descricao_produto:
         query += " AND descricao LIKE %s"
         params.append(f"%{descricao_produto}%")
-    if condicao_produto != 'Todos':
+    if id_condicao_produto is not None:
         query += " AND condicao = %s"
-        params.append(condicao_produto)
+        params.append(id_condicao_produto)
     if completo_produto != 'Todos':
         query += " AND completo = %s"
         params.append(1 if completo_produto == 'Sim' else 0)

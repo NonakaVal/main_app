@@ -188,14 +188,14 @@ def exibir_tipos_cadastrados(mycursor):
         else:
             st.write("Nenhuma editora cadastrada.")
     with tab5:
-        st.markdown("##### Editoras Cadastradas")
+        st.markdown("##### condicao Cadastradas")
         mycursor.execute("SELECT * FROM condicao_descricao")
         editoras = mycursor.fetchall()
         if editoras:
             for editora in editoras:
                 st.write(f"{editora[0]} - {editora[1]} - {editora[2]}")
         else:
-            st.write("Nenhuma editora cadastrada.")
+            st.write("Nenhuma ondicao cadastrada.")
 
 def buscar_produtos_por_nome(nome_produto):
     # Conectar ao banco de dados
