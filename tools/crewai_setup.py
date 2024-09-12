@@ -125,6 +125,7 @@ def create_crewai_setup(product_code, llm):
     """
     max_iter = 70
 
+
     duckduckgo_search = [DuckDuckGoSearchRun()]
     Search_tools = [SearchTools.search_internet, BrowserTools.scrape_and_summarize_website, ScrapeWebsiteTool(), WebsiteSearchTool()]
     
@@ -136,7 +137,7 @@ def create_crewai_setup(product_code, llm):
         llm=llm,
         max_iter=max_iter,
         allow_delegation=True,
-        tools=duckduckgo_search,
+        tools=Search_tools,
         verbose=False
     )
     

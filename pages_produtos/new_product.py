@@ -15,10 +15,11 @@ if mydb and mycursor:
 # Menu lateral para seleção de opções
 option = st.sidebar.selectbox("Escolha uma opção", ["Registrar Produto", 'Atualilzar Produto'])
 
-
+llm = st.secrets["OPENAI_API_KEY"]
 
 
 if option == "Registrar Produto":
+    crew_Search()
         
     display_menu_cadastro()    
     

@@ -115,9 +115,8 @@ def display_menu_cadastro():
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["Produto", "Categorias","Edições", "Editoras", "Fabricantes"])
 
     with tab1:
-        with st.expander("Pesquisar Número Universal"):
-            crew_Search()
-            st.divider()
+
+     
 
         with st.form("product_form"):
             titulo_produto = st.text_input("Título do Produto")
