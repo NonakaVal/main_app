@@ -1,3 +1,9 @@
+##################################################################################################################
+##################################################################################################################
+## Funções para Alteração de produtos
+##################################################################################################################
+##################################################################################################################
+
 import streamlit as st
 import mysql.connector
 from tools.load_from_db import conectar_banco_dados, buscar_produtos_por_nome
@@ -35,10 +41,10 @@ def editar_produto():
                     if not produto:
                         st.error("Produto não encontrado.")
                     else:
-                        nome_produto = produto[1]  # Supondo que o nome está na segunda coluna
-                        qtd_estoque = produto[16]  # Supondo que a quantidade está na coluna 16
-                        preco_atual = produto[19]  # Supondo que o preço está na coluna 19
-                        imagem_atual = produto[11]  # Supondo que a imagem está na coluna 11
+                        nome_produto = produto[1]  
+                        qtd_estoque = produto[16] 
+                        preco_atual = produto[19]  
+                        imagem_atual = produto[11]  
 
                         # Atualizar somente os campos que foram preenchidos
                         sql_update = "UPDATE produtos SET "

@@ -1,15 +1,22 @@
-# Função de login
+
 import streamlit as st
 import mysql.connector
+##################################################################################################################
+##################################################################################################################
+## Funções de configurações gerais de conexão e segurança
+##################################################################################################################
+##################################################################################################################
 
 
 def conectar_banco_dados():
+    '''Conectar ao banco de dados configurado em .secrets
+    Return: mydb, mycursor = conectar_banco_dados()
+    '''
     # Carregar segredos do Streamlit
     db_host = st.secrets["DB_HOST"]
     db_user = st.secrets["DB_USER"]
     db_password = st.secrets["DB_PASSWORD"]
     db_database = st.secrets["DB_DATABASE"]
-
 
     try:
         # Estabelecer uma conexão com o servidor MySQL
@@ -26,13 +33,21 @@ def conectar_banco_dados():
         st.error(f"Erro ao conectar ao banco de dados: {err}")
         return None, None
 
+def fechar_conexao(mydb, mycursor):
+    if mycursor:
+        mycursor.close()
+    if mydb:
+        mydb.close()
+
+##################################################################################################################
 # Conectar ao banco de dados
 mydb, mycursor = conectar_banco_dados()
 if mydb and mycursor:
     # Realize suas operações com mydb e mycursor aqui
     pass
-
-
+##################################################################################################################
+## Autenticação e login
+##################################################################################################################
 def login():
     with st.form("login_form"):
         username = st.text_input("Nome de Usuário")

@@ -1,7 +1,13 @@
+##################################################################################################################
+##################################################################################################################
+## Pagina pesquisa de tabelas de produtos
+##################################################################################################################
+##################################################################################################################
+
 import streamlit as st
 import pandas as pd
 import mysql.connector
-from tools.load_from_db import load_ids, exibir_tipos_cadastrados
+from tools.load_from_db import load_ids, exibir_tipos_cadastrados, load_data
 from tools.app_config import conectar_banco_dados
 
 
@@ -19,25 +25,6 @@ if mydb and mycursor:
     # Realize suas operações com mydb e mycursor aqui
     pass
 
-
-@st.cache_data(ttl="2h")
-def load_data(table_name):
-    try:
-        query = f"SELECT * FROM {table_name}"
-        mycursor.execute(query)
-        colunas = [desc[0] for desc in mycursor.description]
-        dados = mycursor.fetchall()
-        df = pd.DataFrame(dados, columns=colunas)
-
-        # Ajustar os valores conforme necessário
-        for coluna in ['preco_custo', 'preco_venda', 'estoque']:
-            if coluna in df.columns:
-                df[coluna] = pd.to_numeric(df[coluna], errors='coerce')
-
-        return df
-    except mysql.connector.Error as err:
-        st.error(f"Erro ao carregar dados da tabela {table_name}: {err}")
-        return pd.DataFrame()
 
 
 

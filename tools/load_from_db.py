@@ -1,3 +1,9 @@
+##################################################################################################################
+##################################################################################################################
+## Funções Querys do banco de dados
+##################################################################################################################
+##################################################################################################################
+
 import streamlit as st
 import pandas as pd
 import mysql.connector
@@ -10,6 +16,30 @@ mydb, mycursor = conectar_banco_dados()
 if mydb and mycursor:
     # Realize suas operações com mydb e mycursor aqui
     pass
+
+def get_product_details(titulo, serial_number):
+
+    try:
+        mydb, mycursor = conectar_banco_dados()
+        mycursor.execute("""
+            SELECT * FROM produtos WHERE titulo = %s AND serial_number = %s
+        """, (titulo, serial_number))
+        return mycursor.fetchone()
+    except mysql.connector.Error as err:
+        st.error(f"Erro ao buscar detalhes do produto: {err}")
+        return None
+
+def product_exists(titulo, serial_number):
+    try:
+        mydb, mycursor = conectar_banco_dados()
+        mycursor.execute("""
+            SELECT COUNT(*) FROM produtos 
+            WHERE titulo = %s AND serial_number = %s
+        """, (titulo, serial_number))
+        return mycursor.fetchone()[0] > 0
+    except mysql.connector.Error as err:
+        st.error(f"Erro ao verificar existência do produto: {err}")
+        return False
 
 # Função auxiliar para carregar IDs
 def load_ids(table_name, id_column, name_column):
@@ -38,6 +68,7 @@ def load_data(table_name):
     except mysql.connector.Error as err:
         st.error(f"Erro ao carregar dados da tabela {table_name}: {err}")
         return pd.DataFrame()
+  
     
 def obter_nome_e_imagem_produto(id_produto):
     mycursor.execute("SELECT titulo, imagem FROM produtos WHERE id_produto = %s", (id_produto,))
@@ -54,26 +85,7 @@ def obter_nome_e_quantidade_produto(id_produto):
     resultado = mycursor.fetchone()
     return resultado if resultado else (None, None)
 
-def get_product_details(titulo, serial_number):
-    try:
-        mycursor.execute("""
-            SELECT * FROM produtos WHERE titulo = %s AND serial_number = %s
-        """, (titulo, serial_number))
-        return mycursor.fetchone()
-    except mysql.connector.Error as err:
-        st.error(f"Erro ao buscar detalhes do produto: {err}")
-        return None
     
-def product_exists(titulo, serial_number):
-    try:
-        mycursor.execute("""
-            SELECT COUNT(*) FROM produtos 
-            WHERE titulo = %s AND serial_number = %s
-        """, (titulo, serial_number))
-        return mycursor.fetchone()[0] > 0
-    except mysql.connector.Error as err:
-        st.error(f"Erro ao verificar existência do produto: {err}")
-        return False
 
 def view_embalagens():
     # Função para carregar e exibir a tabela de embalagens
@@ -257,7 +269,6 @@ def buscar_produtos_por_nome(nome_produto):
                 st.write("---")
     else:
         st.write("Nenhum produto encontrado com o nome fornecido.")
-
 
 # Função para consultar o histórico de atualizações
 def consultar_historico():

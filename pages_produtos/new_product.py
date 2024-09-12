@@ -1,7 +1,10 @@
+##################################################################################################################
+##################################################################################################################
+## Pagina cadastro de produtos
+##################################################################################################################
+##################################################################################################################
 import streamlit as st
-
 from tools.app_config import conectar_banco_dados
-
 from tools.utils_new_product import display_menu_cadastro
 from tools.crewai_setup import crew_Search
 from tools.utils_update_product import editar_produto
@@ -16,7 +19,6 @@ if mydb and mycursor:
 option = st.sidebar.selectbox("Escolha uma opção", ["Registrar Produto", 'Atualilzar Produto'])
 
 llm = st.secrets["OPENAI_API_KEY"]
-
 
 if option == "Registrar Produto":
     crew_Search()

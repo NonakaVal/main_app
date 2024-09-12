@@ -6,7 +6,6 @@ from tools.app_config import login, logout
 # Configuração da página do Streamlit
 st.set_page_config(page_title="collectorsguardian", page_icon="📦")
 
-# Inicializar a sessão ,layout= "wide" 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 

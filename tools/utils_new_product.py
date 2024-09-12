@@ -1,15 +1,26 @@
+##################################################################################################################
+##################################################################################################################
+## Funções para Cadastro de produtos
+##################################################################################################################
+##################################################################################################################
+
 import os
 import streamlit as st
-import mysql.connector
 from mysql.connector import Error
 import random
 from barcode import Code128
 from barcode.writer import ImageWriter
 from io import BytesIO
-from tools.app_config import conectar_banco_dados
-from tools.crewai_setup import crew_Search
-from tools.load_from_db import load_ids
+from tools.app_config import conectar_banco_dados, fechar_conexao
+from tools.load_from_db import load_ids, product_exists, get_product_details
 from tools.insert_to_bd import registrar_historico
+import qrcode
+from io import BytesIO
+from qrcode.image.pure import PyPNGImage
+
+
+
+
 
 # Conectar ao banco de dados
 mydb, mycursor = conectar_banco_dados()
@@ -33,11 +44,10 @@ if mydb and mycursor:
 
 #     # Formatar e retornar o SKU
 #     return f"{prefix}-{product_code}"
-def fechar_conexao(mydb, mycursor):
-    if mycursor:
-        mycursor.close()
-    if mydb:
-        mydb.close()
+
+##################################################################################################################
+## Geradores de códigos e afins
+##################################################################################################################
 
 def generate_sku(category_id):
     # Garantir que category_id tem o formato correto
@@ -51,7 +61,6 @@ def generate_sku(category_id):
     product_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])  # Gera um código aleatório de 4 dígitos
     return f"{prefix}-{product_code}"
 
-
 def generate_barcode(code_text):
     # Gerar o código de barras Code128
     code = Code128(code_text, writer=ImageWriter())
@@ -60,31 +69,6 @@ def generate_barcode(code_text):
     buffer.seek(0)
     return buffer
 
-def get_product_details(titulo, serial_number):
-    try:
-        mydb, mycursor = conectar_banco_dados()
-        mycursor.execute("""
-            SELECT * FROM produtos WHERE titulo = %s AND serial_number = %s
-        """, (titulo, serial_number))
-        return mycursor.fetchone()
-    except mysql.connector.Error as err:
-        st.error(f"Erro ao buscar detalhes do produto: {err}")
-        return None
-
-def product_exists(titulo, serial_number):
-    try:
-        mydb, mycursor = conectar_banco_dados()
-        mycursor.execute("""
-            SELECT COUNT(*) FROM produtos 
-            WHERE titulo = %s AND serial_number = %s
-        """, (titulo, serial_number))
-        return mycursor.fetchone()[0] > 0
-    except mysql.connector.Error as err:
-        st.error(f"Erro ao verificar existência do produto: {err}")
-        return False
-import qrcode
-from io import BytesIO
-from qrcode.image.pure import PyPNGImage
 
 def generate_qr_code(link):
     """
@@ -106,17 +90,15 @@ def generate_qr_code(link):
     
     return buffer
 
-# Exemplo de uso
-link = "https://encurtador.com.br/qslY6"
-
-
+##################################################################################################################
+## Formulário de Cadastro
+##################################################################################################################
 
 def display_menu_cadastro():
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["Produto", "Categorias","Edições", "Editoras", "Fabricantes"])
 
     with tab1:
 
-     
 
         with st.form("product_form"):
             titulo_produto = st.text_input("Título do Produto")
@@ -188,20 +170,25 @@ def display_menu_cadastro():
                 else:
                     sku = generate_sku(id_categoria_produto)  # Gera um novo SKU para o produto
                     barcode_buffer = generate_barcode(sku)  # Gera o código de barras
-                    barcode_path = os.path.join('bar_codes', f'{sku}.png')
+                    barcode_path = os.path.join('bar_codes', f'{sku}_barcode.png')
                     qr_code_buffer = generate_qr_code(link)
+                    qr_code_path = os.path.join('bar_codes', f'{sku}_qr_code.png')
+
                     # Certificar-se de que o diretório existe
-                    if not os.path.exists('bar_codes'):
-                        os.makedirs('bar_codes')
-                    
+                    os.makedirs('bar_codes', exist_ok=True)
+
                     try:
                         # Salvar a imagem do código de barras
                         with open(barcode_path, 'wb') as f:
                             f.write(barcode_buffer.getvalue())
 
                         # Salvar a imagem do QR code
-                        with open(barcode_path, 'wb') as f:
+                        with open(qr_code_path, 'wb') as f:
                             f.write(qr_code_buffer.getvalue())
+                            
+                    except Exception as e:
+                        print(f"Erro ao salvar imagens: {e}")
+
 
                         # Preparar a consulta SQL
                         sql = """
@@ -397,7 +384,6 @@ def display_menu_cadastro():
             finally:
                 fechar_conexao(mydb, mycursor)
 
-
     with tab4:
         with st.form("publisher_form"):
             nome_editora = st.text_input("Nome da Editora")
@@ -517,3 +503,10 @@ def display_menu_cadastro():
                 st.error(f"Erro ao buscar nome_marca: {e}")
             finally:
                 fechar_conexao(mydb, mycursor)
+
+
+
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
