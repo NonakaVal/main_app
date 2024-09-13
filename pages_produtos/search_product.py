@@ -111,7 +111,6 @@ if submitted:
                 st.write(f"**Preço de Custo:** {row[19]}")
                 st.write(f"**Preço de Venda:** {row[20]}")
                 st.write(f"**ID da Embalagem:** {row[21]}")
-                st.write(f"**Código de Barras:** {row[22]}")
                 st.write(f"**Código Universal:** {row[23]}")
                 st.write(f"**Anunciado:** {'Sim' if row[24] else 'Não'}")
                 st.write(f"**ID do Anúncio:** {row[25]}")
@@ -120,6 +119,14 @@ if submitted:
                 try:
                     if row[22]:
                         st.image(row[22], width=200, caption=f"Código de Barras - Produto {row[1]}")
+                    else:
+                        st.write("Código de barras não disponível.")
+                except Exception as e:
+                    st.write("Erro ao carregar o código de barras. Verifique o link.")
+
+                try:
+                    if row[26]:
+                        st.image(row[26], width=200, caption=f"Código de Barras - Produto {row[1]}")
                     else:
                         st.write("Código de barras não disponível.")
                 except Exception as e:

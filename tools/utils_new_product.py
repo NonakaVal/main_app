@@ -122,9 +122,9 @@ def display_menu_cadastro():
                      # Carregar IDs e nomes
 
             edicoes = load_ids("edicao", "id_edicao", "nome")
-            id_edition_dict = {f[1]: f[0] for f in edicoes}
-            nome_edition = st.selectbox("Nome da edição", list(id_edition_dict.keys()))
-            id_edicao = id_edition_dict.get(nome_edition)
+            id_edicao_dict = {f[1]: f[0] for f in edicoes}
+            nome_edicao = st.selectbox("Nome da edição", list(id_edicao_dict.keys()))
+            id_edicao = id_edicao_dict.get(nome_edicao)
 
 
             # Carregar IDs e nomes
@@ -202,7 +202,7 @@ def display_menu_cadastro():
                             serial_number_produto, serial_caixa_produto, idiomas_disponiveis_produto, imagem_produto,
                             descricao_produto, conteudo_edicao_produto, acessorios_incluidos_produto, raridade_produto,
                             estoque_produto, data_recebimento_produto, preco_custo_produto, preco_venda_produto,
-                            id_embalagem_produto, barcode_path, codigo_universal_produto, int(anunciado_produto), id_anuncio, link
+                            id_embalagem_produto, barcode_path, codigo_universal_produto, int(anunciado_produto), id_anuncio, qr_code_path
                         )
 
                         mydb, mycursor = conectar_banco_dados()
@@ -218,7 +218,7 @@ def display_menu_cadastro():
                                 "Título": produto[1],
                                 "ID da Categoria": produto[2],
                                 "ID do edicao": produto[3],
-                                "ID do Fabricante": produto[4],
+                                "ID do marca": produto[4],
                                 "ID da Editora": produto[5],
                                 "Condição": produto[6],
                                 "Completo": produto[7],
@@ -239,7 +239,8 @@ def display_menu_cadastro():
                                 "Código de Barras": produto[22],
                                 "Código Universal": produto[23],
                                 "Anunciado": produto[24],
-                                "id_anuncio": produto[25]
+                                "id_anuncio": produto[25],
+                                "link": produto[26]
                             })
                     except Exception as e:
                         st.error(f"Erro ao gerar ou salvar o código de barras: {e}")
@@ -305,25 +306,25 @@ def display_menu_cadastro():
                 fechar_conexao(mydb, mycursor)
 
     with tab3:
-        with st.form("editionform"):
-                edition_name = st.text_input("Nome da Edição")
+        with st.form("edicaoform"):
+                edicao_name = st.text_input("Nome da Edição")
 
                 if st.form_submit_button("Registrar Edição"):
-                    if not edition_name:
+                    if not edicao_name:
                         st.error("Nome do Edição é obrigatório.")
                     else:
                         mydb, mycursor = conectar_banco_dados()
                         if mydb and mycursor:
                             try:
                                 # Verificar se o fabricante já existe
-                                mycursor.execute("SELECT COUNT(*) FROM edition WHERE nome = %s", (edition_name,))
+                                mycursor.execute("SELECT COUNT(*) FROM edicao WHERE nome = %s", (edicao_name,))
                                 existe_fabricante = mycursor.fetchone()[0]
 
                                 if existe_fabricante > 0:
-                                    st.error("edition com esse nome já existe.")
+                                    st.error("edicao com esse nome já existe.")
                                 else:
                                     # Obter o maior ID existente
-                                    mycursor.execute("SELECT id_edition FROM edition WHERE id_edition REGEXP '^D[0-9]{3}$' ORDER BY id_edition DESC LIMIT 1")
+                                    mycursor.execute("SELECT id_edicao FROM edicao WHERE id_edicao REGEXP '^D[0-9]{3}$' ORDER BY id_edicao DESC LIMIT 1")
                                     max_id_result = mycursor.fetchone()
 
                                     if max_id_result:
@@ -334,33 +335,33 @@ def display_menu_cadastro():
                                         next_id = 'D001'  # Se não houver ID válido, começa do 'F001'
 
                                     # Inserir novo fabricante com o ID gerado
-                                    sql = "INSERT INTO edition (id_edition, nome) VALUES (%s, %s)"
-                                    mycursor.execute(sql, (next_id, edition_name))
+                                    sql = "INSERT INTO edicao (id_edicao, nome) VALUES (%s, %s)"
+                                    mycursor.execute(sql, (next_id, edicao_name))
                                     mydb.commit()
 
                                     # Registrar no histórico
-                                    detalhes = f"edition '{edition_name}' com ID {next_id} registrado com sucesso."
-                                    registrar_historico("Registro", "editionform", detalhes)
+                                    detalhes = f"edicao '{edicao_name}' com ID {next_id} registrado com sucesso."
+                                    registrar_historico("Registro", "edicaoform", detalhes)
 
-                                    st.success("edition_name Registrado com Sucesso!!!")
+                                    st.success("edicao_name Registrado com Sucesso!!!")
                             except Error as e:
                                 st.error(f"Erro ao operar no banco de dados: {e}")
                             finally:
                                 fechar_conexao(mydb, mycursor)
             
-        st.text("edition_name Cadastrados")
+        st.text("edicao_name Cadastrados")
         mydb, mycursor = conectar_banco_dados()
         if mydb and mycursor:
             try:
-                mycursor.execute("SELECT * FROM edition")
-                editions = mycursor.fetchall()
-                if editions:
-                    for edition in editions:
-                        st.write(f"**ID:** {edition[0]} - {edition[1]}")
+                mycursor.execute("SELECT * FROM edicao")
+                edicaos = mycursor.fetchall()
+                if edicaos:
+                    for edicao in edicaos:
+                        st.write(f"**ID:** {edicao[0]} - {edicao[1]}")
                 else:
-                    st.write("Nenhum edition cadastrado.")
+                    st.write("Nenhum edicao cadastrado.")
             except Error as e:
-                st.error(f"Erro ao buscar edition: {e}")
+                st.error(f"Erro ao buscar edicao: {e}")
             finally:
                 fechar_conexao(mydb, mycursor)
 
