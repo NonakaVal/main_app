@@ -26,7 +26,7 @@ with st.sidebar:
     produto_anunciado = st.radio("Buscar está Anunciado", ['Todos', 'Sim', 'Não'])
     completo_produto = st.radio("Buscar por Completo", ['Todos', 'Sim', 'Não'])
     
-    id_condicao_produto = st.selectbox("Buscar por ID da Condição", ['Todos'] + [f"{f[0]} - {f[1]}" for f in load_ids("condicao_descricao", "codigo", "nome")])
+    id_condicao_produto = st.selectbox("Buscar por ID da Condição", ['Todos'] + [f"{f[0]} - {f[1]}" for f in load_ids("condicao", "id_condicao", "nome")])
     id_condicao_produto = (id_condicao_produto.split(' ')[0]) if id_condicao_produto != 'Todos' else None
     
     id_fabricante_produto = st.selectbox("Buscar por ID do Fabricante", ['Todos'] + [f"{f[0]} - {f[1]}" for f in load_ids("marca", "id_marca", "nome")])

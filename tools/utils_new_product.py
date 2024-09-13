@@ -110,7 +110,7 @@ def display_menu_cadastro():
             serial_caixa_produto = st.text_input("Número de Série da Caixa")
             idiomas_disponiveis_produto = st.selectbox("Idiomas Disponíveis", ('Global', 'pt-BR', 'en-US', 'ja-JP'))
             
-            conditions = load_ids("condicao_descricao", "codigo", "nome")
+            conditions = load_ids("condicao", "id_condicao", "nome")
             id_conditions_dict = {f[1]: f[0] for f in conditions}
             nome_condition = st.selectbox("condição", list(id_conditions_dict.keys()))
             id_condition = id_conditions_dict.get(nome_condition)
@@ -121,7 +121,7 @@ def display_menu_cadastro():
             id_categoria_produto = id_categoria_dict.get(nome_categoria)
                      # Carregar IDs e nomes
 
-            edicoes = load_ids("edition", "id_edition", "nome")
+            edicoes = load_ids("edicao", "id_edicao", "nome")
             id_edition_dict = {f[1]: f[0] for f in edicoes}
             nome_edition = st.selectbox("Nome da edição", list(id_edition_dict.keys()))
             id_edicao = id_edition_dict.get(nome_edition)
@@ -160,7 +160,9 @@ def display_menu_cadastro():
             link = st.text_input("Link Anúncio")
    
 
+
             if st.form_submit_button("Registrar Produto"):
+                print("Formulário enviado")
                 if not titulo_produto or not serial_number_produto:
                     st.error("Título do produto e número de série são obrigatórios.")
                 elif product_exists(titulo_produto, serial_number_produto):
@@ -168,34 +170,27 @@ def display_menu_cadastro():
                 elif id_marca is None or id_categoria_produto is None or id_editora_produto is None:
                     st.error("Um ou mais IDs selecionados são inválidos.")
                 else:
-                    sku = generate_sku(id_categoria_produto)  # Gera um novo SKU para o produto
-                    barcode_buffer = generate_barcode(sku)  # Gera o código de barras
-                    barcode_path = os.path.join('bar_codes', f'{sku}_barcode.png')
-                    qr_code_buffer = generate_qr_code(link)
-                    qr_code_path = os.path.join('bar_codes', f'{sku}_qr_code.png')
-
-                    # Certificar-se de que o diretório existe
-                    os.makedirs('bar_codes', exist_ok=True)
-
                     try:
-                        # Salvar a imagem do código de barras
+                        sku = generate_sku(id_categoria_produto)
+                        print(f"SKU gerado: {sku}")
+                        barcode_buffer = generate_barcode(sku)
+                        qr_code_buffer = generate_qr_code(link)
+                        print("Códigos gerados")
+                        
+                        barcode_path = os.path.join('bar_codes', f'{sku}_barcode.png')
+                        qr_code_path = os.path.join('bar_codes', f'{sku}_qr_code.png')
+
+                        os.makedirs('bar_codes', exist_ok=True)
                         with open(barcode_path, 'wb') as f:
                             f.write(barcode_buffer.getvalue())
-
-                        # Salvar a imagem do QR code
                         with open(qr_code_path, 'wb') as f:
                             f.write(qr_code_buffer.getvalue())
-                            
-                    except Exception as e:
-                        print(f"Erro ao salvar imagens: {e}")
 
-
-                        # Preparar a consulta SQL
                         sql = """
                             INSERT INTO produtos (
-                                id_produto, titulo, id_categoria, id_edition,  id_marca, id_editora, condicao, completo, manual_instrucoes, 
-                                serial_number, serial_caixa, idiomas_disponiveis, imagem, descricao, conteudo_edicao, 
-                                acessorios_incluidos, raridade, estoque, data_recebimento, preco_custo, preco_venda, id_embalagem, 
+                                id_produto, titulo, id_categoria, id_edicao, id_marca, id_editora, id_condicao, completo, manual_instrucoes,
+                                serial_number, serial_caixa, idiomas_disponiveis, imagem, descricao, conteudo_edicao,
+                                acessorios_incluidos, raridade, estoque, data_recebimento, preco_custo, preco_venda, id_embalagem,
                                 codigo_barras, codigo_universal, anunciado, ITEM_ID, ad_link
                             ) VALUES (
                                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s, %s, %s, %s, %s, %s
@@ -210,59 +205,44 @@ def display_menu_cadastro():
                             id_embalagem_produto, barcode_path, codigo_universal_produto, int(anunciado_produto), id_anuncio, link
                         )
 
-                        # Conectar ao banco de dados e executar a inserção
-                        mydb = None
-                        mycursor = None
-                        try:
-                            mydb, mycursor = conectar_banco_dados()
-                            mycursor.execute(sql, values)
-                            mydb.commit()
-                            detalhes = f"Produto '{titulo_produto}' com SKU {sku} registrado com sucesso."
-                            registrar_historico("Registro", "produtos", detalhes)
-                            st.success("Produto registrado com sucesso!")
+                        mydb, mycursor = conectar_banco_dados()
+                        mycursor.execute(sql, values)
+                        mydb.commit()
+                        st.success("Produto registrado com sucesso!")
 
-                            # Recuperar e exibir detalhes do produto registrado
-                            produto = get_product_details(titulo_produto, serial_number_produto)
-                            if produto:
-                                st.write("Detalhes do Produto Registrado:")
-                                st.json({
-                                    "ID do Produto": produto[0],            # id_produto
-                                    "Título": produto[1],                   # titulo
-                                    "ID da Categoria": produto[2],  
-                                    "ID do edicao": produto[3],         # id_categoria
-                                    "ID do Fabricante": produto[4],         # id_fabricante
-                                    "ID da Editora": produto[5],            # id_editora
-                                    "Condição": produto[6],                 # condicao
-                                    "Completo": produto[7],                 # completo
-                                    "Manual de Instruções": produto[8],     # manual_instrucoes
-                                    "Número de Série": produto[9],          # serial_number
-                                    "Número de Série da Caixa": produto[10], # serial_caixa
-                                    "Idiomas Disponíveis": produto[11],     # idiomas_disponiveis
-                                    "Imagem": produto[12],                 # imagem
-                                    "Descrição": produto[13],              # descricao
-                                    "Conteúdo da Edição": produto[14],      # conteudo_edicao
-                                    "Acessórios Incluídos": produto[15],    # acessorios_incluidos
-                                    "Raridade": produto[16],                # raridade
-                                    "Estoque": produto[17],                # estoque
-                                    "Data de Recebimento": produto[18],     # data_recebimento
-                                    "Preço de Custo": produto[19],          # preco_custo
-                                    "Preço de Venda": produto[20],          # preco_venda
-                                    "ID da Embalagem": produto[21],         # id_embalagem
-                                    "Código de Barras": produto[22],        # codigo_barras
-                                    "Código Universal": produto[23],       # codigo_universal
-                                    "Anunciado": produto[24]   ,
-                                    "id_anuncio": produto[25]            # anunciado
-                                })
-                        except Exception as e:
-                            st.error(f"Erro ao conectar ao banco de dados ou ao registrar o produto: {e}")
-                            st.error("Ocorreu um erro ao tentar registrar o produto.")
-                        finally:
-                            # Garantir que o banco de dados seja fechado corretamente
-                            if mydb is not None:
-                                mydb.close()
+                        produto = get_product_details(titulo_produto, serial_number_produto)
+                        if produto:
+                            st.write("Detalhes do Produto Registrado:")
+                            st.json({
+                                "ID do Produto": produto[0],
+                                "Título": produto[1],
+                                "ID da Categoria": produto[2],
+                                "ID do edicao": produto[3],
+                                "ID do Fabricante": produto[4],
+                                "ID da Editora": produto[5],
+                                "Condição": produto[6],
+                                "Completo": produto[7],
+                                "Manual de Instruções": produto[8],
+                                "Número de Série": produto[9],
+                                "Número de Série da Caixa": produto[10],
+                                "Idiomas Disponíveis": produto[11],
+                                "Imagem": produto[12],
+                                "Descrição": produto[13],
+                                "Conteúdo da Edição": produto[14],
+                                "Acessórios Incluídos": produto[15],
+                                "Raridade": produto[16],
+                                "Estoque": produto[17],
+                                "Data de Recebimento": produto[18],
+                                "Preço de Custo": produto[19],
+                                "Preço de Venda": produto[20],
+                                "ID da Embalagem": produto[21],
+                                "Código de Barras": produto[22],
+                                "Código Universal": produto[23],
+                                "Anunciado": produto[24],
+                                "id_anuncio": produto[25]
+                            })
                     except Exception as e:
                         st.error(f"Erro ao gerar ou salvar o código de barras: {e}")
-
     with tab2:
         with st.form("category_form"):
             nome_categoria = st.text_input("Nome da Categoria")

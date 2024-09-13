@@ -92,7 +92,7 @@ if option == "Produtos":
                 query += " AND titulo LIKE %s"
                 params.append(f"%{nome_produto}%")
             if condicao_produto != 'Todos':
-                query += " AND condicao = %s"
+                query += " AND id_condicao = %s"
                 params.append(condicao_produto)
             if id_fabricante_produto:
                 query += " AND id_fabricante = %s"

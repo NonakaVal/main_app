@@ -192,7 +192,7 @@ def exibir_tipos_cadastrados(mycursor):
             st.write("Nenhuma editora cadastrada.")
     with tab4:
         st.markdown("##### Editoras Cadastradas")
-        mycursor.execute("SELECT * FROM edition")
+        mycursor.execute("SELECT * FROM edicao")
         editoras = mycursor.fetchall()
         if editoras:
             for editora in editoras:
@@ -201,7 +201,7 @@ def exibir_tipos_cadastrados(mycursor):
             st.write("Nenhuma editora cadastrada.")
     with tab5:
         st.markdown("##### condicao Cadastradas")
-        mycursor.execute("SELECT * FROM condicao_descricao")
+        mycursor.execute("SELECT * FROM condicao")
         editoras = mycursor.fetchall()
         if editoras:
             for editora in editoras:
