@@ -80,7 +80,12 @@ if submitted:
     if result:
         for row in result:
             with st.expander(f"{row[1]} - {row[0]}"):
-                st.write(f"**ID do Produto:** {row[0]}")
+                id_ = f"{row[0]}"
+                st.markdown(f"""
+                            ```copiar
+                            {id_}
+                            ```
+                            """)
                 st.write(f"**Título:** {row[1]}")
                 st.write(f"**ID da Categoria:** {row[2]}")
                 st.write(f"**ID da Edição:** {row[3]}")
