@@ -111,9 +111,10 @@ def display_menu_cadastro():
             idiomas_disponiveis_produto = st.selectbox("Idiomas Disponíveis", ('Global', 'pt-BR', 'en-US', 'ja-JP'))
             
             conditions = load_ids("condicao", "id_condicao", "nome")
-            id_conditions_dict = {f[1]: f[0] for f in conditions}
+            id_conditions_dict = {f"{f[1]} ({f[0]})": f[0] for f in conditions}
             nome_condition = st.selectbox("condição", list(id_conditions_dict.keys()))
             id_condition = id_conditions_dict.get(nome_condition)
+
 
             categorias = load_ids("categoria", "id_categoria", "nome")
             id_categoria_dict = {c[1]: c[0] for c in categorias}

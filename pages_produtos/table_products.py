@@ -48,8 +48,11 @@ if option == "Produtos":
 
             nome_produto = st.text_input("Buscar por Nome do Produto")
             
-            condicao_produto = st.selectbox("Buscar por Condição", ['Todos', 'N', 'S', 'A','B+', 'B', 'C', 'D', 'E', 'J', 'Z', 'G'])
-            
+            # condicao_produto = st.selectbox("Buscar por Condição", ['Todos', 'N', 'S', 'A','B+', 'B', 'C', 'D', 'E', 'J', 'Z', 'G'])
+            conditions = load_ids("condicao", "id_condicao", "nome")
+            id_conditions_dict = {f"{f[1]} ({f[0]})": f[0] for f in conditions}
+            nome_condition = st.selectbox("condição", list(id_conditions_dict.keys()))
+            condicao_produto = id_conditions_dict.get(nome_condition)
             # Carregar IDs dos fabricantes e categorias
             fabricantes = load_ids("marca", "id_marca", "nome")
             categorias = load_ids("categoria", "id_categoria", "nome")
