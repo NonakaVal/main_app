@@ -6,7 +6,7 @@
 import streamlit as st
 from tools.app_config import conectar_banco_dados
 from tools.utils_new_product import display_menu_cadastro
-from tools.crewai_setup import crew_Search
+from tools.crewai_setup import create_price_comparison_team
 from tools.utils_update_product import editar_produto
 from tools.load_from_db import buscar_produtos_por_nome
 # Conectar ao banco de dados
@@ -18,10 +18,12 @@ if mydb and mycursor:
 # Menu lateral para seleção de opções
 option = st.sidebar.selectbox("Escolha uma opção", ["Registrar Produto", 'Atualilzar Produto'])
 
-llm = st.secrets["OPENAI_API_KEY"]
+# llm = st.secrets["OPENAI_API_KEY"]
 
 if option == "Registrar Produto":
-    crew_Search()
+    # product_name = st.text_input("Buscar por ID do Produto")
+
+    # create_price_comparison_team(product_name=product_name, llm=llm)
         
     display_menu_cadastro()    
     

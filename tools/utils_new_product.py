@@ -100,7 +100,7 @@ def display_menu_cadastro():
     with tab1:
 
 
-        with st.form("product_form"):
+        with st.form("product_form", clear_on_submit=True):
             titulo_produto = st.text_input("Título do Produto")
 
             
